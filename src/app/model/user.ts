@@ -56,6 +56,10 @@ const userSchema: Schema<user> = new Schema({
         required: [true, "Verification code is not valid"],
         
     },
+    verified:{
+        type: Boolean,
+        default: false,
+    },
     isAcceptingMessage:{
         type: Boolean,
         default: false,

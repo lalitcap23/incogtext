@@ -44,10 +44,10 @@ export async function POST(request: Request) {
       email,
       username,
       password: hashedPassword,
-      isverified: false, // Make sure your schema uses 'isverified'
-      verifycode,
-      expirydate,
-      isAcceptingMessages: true,
+      verified: false,
+      verifyCode: verifycode,
+      verifyCodeExpires: expirydate,
+      isAcceptingMessage: true,
       messages: [],
     });
 

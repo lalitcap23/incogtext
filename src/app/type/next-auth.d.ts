@@ -1,27 +1,26 @@
-import NextAuth from "next-auth";
-import { decl } from "postcss";
+import NextAuth, { DefaultSession } from "next-auth";
 
 declare module "next-auth" {
     interface User{
         _id?: string; 
-        isverified?: boolean;
+        verified?: boolean;
         username?: string;
-        isAcceptingMessages?: boolean;
+        isAcceptingMessage?: boolean;
     }
     interface Session {
       user: {
         _id?: string; 
-        isverified?: boolean;
+        verified?: boolean;
         username?: string;
-        isAcceptingMessages?: boolean;
+        isAcceptingMessage?: boolean;
       }& DefaultSession["user"]; 
     }
 }
 declare module "next-auth/jwt" {
     interface JWT {
         _id?: string; 
-        isverified?: boolean;
+        verified?: boolean;
         username?: string;
-        isAcceptingMessages?: boolean;
+        isAcceptingMessage?: boolean;
     }
 }
