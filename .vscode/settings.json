@@ -1,0 +1,15 @@
+{
+  "background.fullscreen": {
+    // Local images can be dragged into the browser to quickly get the file protocol address from the address bar
+    "images": ["https://4kwallpapers.com/images/walls/thumbs_2t/10499.jpg"],
+    "opacity": 0.1,
+    "size": "cover",
+    "position": "center",
+    "interval": 0,
+    "random": false
+  },
+  // `sidebar` and `panel` have the same config as `fullscreen`
+  "background.sidebar": {},
+  "background.panel": {}
+  //https://backiee.com/static/wallpapers/1920x1080/396529.jpg
+}

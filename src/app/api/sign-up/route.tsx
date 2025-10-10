@@ -8,18 +8,24 @@ export async function POST(request: Request) {
     await dbConnect();
     const body = await request.json();
     const { email, username, password } = body;
-    console.log("body", body);
-    
+
+    if (!email || !username || !password) {
+      return Response.json({
+        success: false,
+        message: "Email, username, and password are required.",
+        status: 400,
+      });
+    }
+
     const existingUsername = await UserModal.findOne({ username });
     if (existingUsername) {
       return Response.json({
         success: false,
         message: "Username already exists",
-        status: 409, 
+        status: 409,
       });
     }
-    
-    // Check if email already exists
+
     const existingEmail = await UserModal.findOne({ email });
     if (existingEmail) {
       return Response.json({
@@ -28,27 +34,25 @@ export async function POST(request: Request) {
         status: 409,
       });
     }
-    
-    // Hash password and prepare user data
+
     const hashedPassword = await bcrypt.hash(password, 10);
     const verifycode = Math.floor(100000 + Math.random() * 900000).toString();
     const expirydate = new Date();
     expirydate.setHours(expirydate.getHours() + 1);
-    
+
     const newUser = new UserModal({
       email,
       username,
       password: hashedPassword,
-      isverified: false,
+      isverified: false, // Make sure your schema uses 'isverified'
       verifycode,
       expirydate,
       isAcceptingMessages: true,
       messages: [],
     });
-    
-    // Send verification email first
+
     const emailResponse = await sendVerificationEmail(email, username, verifycode);
-    
+
     if (!emailResponse.success) {
       return Response.json({
         success: false,
@@ -56,16 +60,15 @@ export async function POST(request: Request) {
         status: 500,
       });
     }
-    
-    // Save user only after successful email sending
+
     await newUser.save();
-    
+
     return Response.json({
       success: true,
-      message: "User registered successfully",
+      message: "User registered successfully. Please check your email for the verification code.",
       status: 200,
     });
-    
+
   } catch (error) {
     console.error("Error:", error);
     return Response.json({
@@ -75,4 +78,3 @@ export async function POST(request: Request) {
     });
   }
 }
-//
