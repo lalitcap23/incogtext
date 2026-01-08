@@ -1,15 +1,11 @@
 'use client';
 
 import { useState, FormEvent } from 'react';
-import { Metadata } from 'next';
 import Link from 'next/link';
 
-
-export default function ContactPage() {
+export default function HomePage() {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    subject: '',
+    username: '',
     message: ''
   });
   
@@ -30,8 +26,7 @@ export default function ContactPage() {
     setSubmitStatus({});
     
     try {
-      // This would call your API route that handles email sending
-      const response = await fetch('/api/contact', {
+      const response = await fetch('/api/message', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -44,12 +39,10 @@ export default function ContactPage() {
       if (response.ok) {
         setSubmitStatus({
           success: true,
-          message: 'Your message has been sent successfully!'
+          message: 'Your anonymous message has been sent successfully!'
         });
         setFormData({
-          name: '',
-          email: '',
-          subject: '',
+          username: '',
           message: ''
         });
       } else {
@@ -66,20 +59,20 @@ export default function ContactPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md">
+    <main className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-lg">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Contact Us</h1>
-          <p className="mt-2 text-lg text-gray-600">
-            Send us a message and we'll get back to you as soon as possible
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">IncogText</h1>
+          <p className="text-lg text-gray-600">
+            Send anonymous messages to anyone
           </p>
         </div>
 
         {submitStatus.success ? (
           <div className="bg-green-50 border border-green-400 text-green-700 px-4 py-3 rounded mb-6" role="alert">
-            <p>{submitStatus.message}</p>
+            <p className="font-semibold">{submitStatus.message}</p>
             <button 
-              className="mt-4 text-green-700 underline"
+              className="mt-4 text-green-700 underline hover:text-green-800"
               onClick={() => setSubmitStatus({})}
             >
               Send another message
@@ -88,61 +81,33 @@ export default function ContactPage() {
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                Your Name
+              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
+                Username (recipient)
               </label>
               <input
                 type="text"
-                id="name"
-                name="name"
+                id="username"
+                name="username"
                 required
-                value={formData.name}
+                value={formData.username}
                 onChange={handleChange}
+                placeholder="Enter the username of the recipient"
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
             
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Your Email
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                required
-                value={formData.email}
-                onChange={handleChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              />
-            </div>
-            
-            <div>
-              <label htmlFor="subject" className="block text-sm font-medium text-gray-700">
-                Subject
-              </label>
-              <input
-                type="text"
-                id="subject"
-                name="subject"
-                required
-                value={formData.subject}
-                onChange={handleChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              />
-            </div>
-            
-            <div>
-              <label htmlFor="message" className="block text-sm font-medium text-gray-700">
-                Message
+              <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
+                Your Anonymous Message
               </label>
               <textarea
                 id="message"
                 name="message"
-                rows={5}
+                rows={6}
                 required
                 value={formData.message}
                 onChange={handleChange}
+                placeholder="Type your message here..."
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
@@ -155,15 +120,15 @@ export default function ContactPage() {
             
             <div className="flex items-center justify-between">
               <Link
-                href="/"
-                className="text-sm text-indigo-600 hover:text-indigo-500"
+                href="/sign-in"
+                className="text-sm text-indigo-600 hover:text-indigo-500 font-medium"
               >
-                Back to Home
+                Sign in to view your messages
               </Link>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
+                className={`inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
                   isSubmitting ? 'opacity-75 cursor-not-allowed' : ''
                 }`}
               >
