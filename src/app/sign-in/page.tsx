@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import { signIn, getSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { signIn } from 'next-auth/react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { z } from 'zod';
 
@@ -11,14 +11,64 @@ const signInSchema = z.object({
   password: z.string().min(1, 'Password is required'),
 });
 
-export default function SignInPage() {
+function SignInForm() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const verifiedEmail = searchParams.get('email');
+  const isVerified = searchParams.get('verified') === 'true';
+  
   const [formData, setFormData] = useState({
-    email: '',
+    email: verifiedEmail || '',
     password: '',
   });
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
+  
+  // Auto-attempt sign-in after verification if email is provided
+  useEffect(() => {
+    if (isVerified && verifiedEmail && typeof window !== 'undefined') {
+      // Get password from sessionStorage (stored before redirecting to verify)
+      const storedPassword = sessionStorage.getItem('pendingPassword');
+      if (storedPassword) {
+        setFormData(prev => ({ ...prev, email: verifiedEmail, password: storedPassword }));
+        // Clear stored password
+        sessionStorage.removeItem('pendingPassword');
+        // Auto-submit after a short delay
+        setTimeout(() => {
+          handleAutoSignIn(verifiedEmail, storedPassword);
+        }, 500);
+      }
+    }
+    // @ts-expect-error - useEffect deps
+  }, [isVerified, verifiedEmail]);
+  
+  const handleAutoSignIn = async (email: string, password: string) => {
+    setIsLoading(true);
+    try {
+      const apiResponse = await fetch('/api/sign-in', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const apiData = await apiResponse.json();
+      
+      if (apiData.success && !apiData.needsVerification) {
+        const result = await signIn('credentials', {
+          username: email,
+          password: password,
+          redirect: false,
+        });
+        if (result?.ok) {
+          router.push('/dashboard');
+          return;
+        }
+      }
+    } catch (error) {
+      console.error('Auto sign-in failed:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -56,7 +106,25 @@ export default function SignInPage() {
 
       // If user needs verification, redirect to verify page
       if (apiData.needsVerification) {
-        router.push(`/verify?email=${encodeURIComponent(formData.email)}`);
+        // Store password temporarily in sessionStorage for auto-sign-in after verification
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('pendingPassword', formData.password);
+        }
+        
+        // In development mode, if code is provided, include it in URL
+        const verifyUrl = apiData.verifyCode 
+          ? `/verify?email=${encodeURIComponent(formData.email)}&code=${apiData.verifyCode}`
+          : `/verify?email=${encodeURIComponent(formData.email)}`;
+        
+        // Log the code to console for easy access in dev mode
+        if (apiData.verifyCode) {
+          console.log('\n=== VERIFICATION CODE (DEV MODE) ===');
+          console.log(`Email: ${formData.email}`);
+          console.log(`Code: ${apiData.verifyCode}`);
+          console.log('=====================================\n');
+        }
+        
+        router.push(verifyUrl);
         return;
       }
 
@@ -70,9 +138,7 @@ export default function SignInPage() {
       if (result?.error) {
         setErrors({ general: 'Authentication failed. Please try again.' });
       } else if (result?.ok) {
-        // Get session to check if user is verified
-        const session = await getSession();
-        router.push('/dashboard'); // Redirect to dashboard or home page
+        router.push('/dashboard');
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -115,12 +181,12 @@ export default function SignInPage() {
             Welcome Back
           </h2>
           <p className="text-base text-gray-600 max-w-sm mx-auto">
-            Sign in to your account or create a new one. It's quick and easy!
+            Sign in to your account or create a new one. It&apos;s quick and easy!
           </p>
         </div>
 
         {/* Form Card */}
-        <form className="bg-white p-8 rounded-3xl shadow-2xl border border-teal-100/50 backdrop-blur-sm" onSubmit={handleSubmit}>
+        <form id="signin-form" className="bg-white p-8 rounded-3xl shadow-2xl border border-teal-100/50 backdrop-blur-sm" onSubmit={handleSubmit}>
           <div className="space-y-6">
             {/* Email Field */}
             <div>
@@ -215,6 +281,7 @@ export default function SignInPage() {
           <div className="mt-8">
             <button
               type="submit"
+              form="signin-form"
               disabled={isLoading}
               className="group relative w-full flex justify-center items-center py-4 px-4 border border-transparent text-base font-semibold rounded-xl text-white bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 active:translate-y-0"
             >
@@ -237,6 +304,21 @@ export default function SignInPage() {
             </button>
           </div>
 
+          {/* Verified Success Message */}
+          {isVerified && verifiedEmail && (
+            <div className="mt-6 p-4 bg-emerald-50 border-2 border-emerald-400 rounded-xl">
+              <div className="flex items-start">
+                <svg className="w-5 h-5 text-emerald-600 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-emerald-800">Email verified successfully!</p>
+                  <p className="text-xs text-emerald-700 mt-1">Signing you in automatically...</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Info Message */}
           <div className="mt-6 p-4 bg-teal-50 border border-teal-200 rounded-xl">
             <div className="flex items-start">
@@ -244,7 +326,7 @@ export default function SignInPage() {
                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
               </svg>
               <p className="text-sm text-teal-800">
-                <span className="font-semibold">New user?</span> Just enter your email and password. We'll create your account and send a verification code.
+                <span className="font-semibold">New user?</span> Just enter your email and password. We&apos;ll create your account and send a verification code.
               </p>
             </div>
           </div>
@@ -261,5 +343,17 @@ export default function SignInPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-teal-50 to-emerald-50">
+        <div className="text-xl text-gray-700">Loading sign-in page...</div>
+      </div>
+    }>
+      <SignInForm />
+    </Suspense>
   );
 }

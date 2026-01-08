@@ -11,8 +11,9 @@ function VerifyForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get('email') || '';
+  const codeFromUrl = searchParams.get('code') || '';
   
-  const [code, setCode] = useState('');
+  const [code, setCode] = useState(codeFromUrl);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -22,6 +23,13 @@ function VerifyForm() {
       router.push('/sign-in');
     }
   }, [email, router]);
+  
+  useEffect(() => {
+    // If code is in URL (from dev mode), auto-fill it
+    if (codeFromUrl) {
+      setCode(codeFromUrl);
+    }
+  }, [codeFromUrl]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, '').slice(0, 6);
@@ -53,10 +61,50 @@ function VerifyForm() {
 
       if (data.success) {
         setSuccess(true);
-        // Redirect to dashboard after verification
-        setTimeout(() => {
-          router.push('/dashboard');
-        }, 1500);
+        
+        // After verification, automatically sign in the user
+        // Get password from sessionStorage (stored when redirecting to verify)
+        const storedPassword = typeof window !== 'undefined' ? sessionStorage.getItem('pendingPassword') : null;
+        
+        if (storedPassword && data.email) {
+          // Auto-sign in with stored password
+          try {
+            const signInResult = await signIn('credentials', {
+              username: data.email,
+              password: storedPassword,
+              redirect: false,
+            });
+            
+            // Clear stored password
+            if (typeof window !== 'undefined') {
+              sessionStorage.removeItem('pendingPassword');
+            }
+            
+            if (signInResult?.ok) {
+              // Successfully signed in, redirect to dashboard
+              setTimeout(() => {
+                router.push('/dashboard');
+              }, 1000);
+              return;
+            } else {
+              // Sign in failed, redirect to sign-in page with email pre-filled
+              setTimeout(() => {
+                router.push(`/sign-in?verified=true&email=${encodeURIComponent(data.email)}`);
+              }, 1500);
+            }
+          } catch (error) {
+            console.error('Auto sign-in error:', error);
+            // If auto-sign-in fails, redirect to sign-in page
+            setTimeout(() => {
+              router.push(`/sign-in?verified=true&email=${encodeURIComponent(data.email)}`);
+            }, 1500);
+          }
+        } else {
+          // No stored password, redirect to sign-in page with email pre-filled
+          setTimeout(() => {
+            router.push(`/sign-in?verified=true&email=${encodeURIComponent(data.email || email)}`);
+          }, 1500);
+        }
       } else {
         setErrors({ general: data.message || 'Verification failed' });
       }
@@ -113,6 +161,17 @@ function VerifyForm() {
               Verifying: <span className="font-semibold text-teal-700">{email}</span>
             </p>
           )}
+          {codeFromUrl && (
+            <div className="mt-4 p-4 bg-yellow-50 border-2 border-yellow-400 rounded-xl">
+              <p className="text-sm text-yellow-800 font-semibold mb-1">Development Mode:</p>
+              <p className="text-sm text-yellow-700">
+                Verification code auto-filled: <span className="font-mono font-bold text-lg">{codeFromUrl}</span>
+              </p>
+              <p className="text-xs text-yellow-600 mt-2">
+                Email sending failed in development. Check server logs for the code.
+              </p>
+            </div>
+          )}
         </div>
         <form className="mt-8 space-y-6 bg-white p-8 rounded-2xl shadow-xl border border-teal-100" onSubmit={handleSubmit}>
           <div>
@@ -153,7 +212,7 @@ function VerifyForm() {
 
           <div className="text-center">
             <p className="text-sm text-gray-600">
-              Didn't receive the code?{' '}
+              Didn&apos;t receive the code?{' '}
               <Link href="/sign-in" className="font-medium text-teal-600 hover:text-teal-700">
                 Try again
               </Link>

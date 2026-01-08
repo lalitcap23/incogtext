@@ -17,6 +17,7 @@ export default function DashboardPage() {
   const [isAcceptingMessages, setIsAcceptingMessages] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [isToggling, setIsToggling] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -101,11 +102,50 @@ export default function DashboardPage() {
 
           <div className="mt-6 p-6 bg-gradient-to-r from-teal-50 to-emerald-50 rounded-xl border-2 border-teal-200">
             <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-semibold text-gray-700 text-sm uppercase tracking-wide">Your Username</h3>
-                <p className="text-3xl font-bold bg-gradient-to-r from-teal-600 to-emerald-600 bg-clip-text text-transparent mt-2">{session.user?.username}</p>
-                <p className="text-sm text-gray-600 mt-3">
-                  Share this username for others to send you anonymous messages
+              <div className="flex-1">
+                <h3 className="font-semibold text-gray-700 text-sm uppercase tracking-wide mb-2">Your Unique Link</h3>
+                <div className="bg-white rounded-lg p-4 border-2 border-teal-300 mb-3">
+                  <p className="text-sm text-gray-600 mb-2">Share this link to receive anonymous messages:</p>
+                  <div className="flex items-center gap-2">
+                    <code className="flex-1 bg-gray-50 px-4 py-2 rounded-lg text-sm font-mono text-teal-700 break-all">
+                      {typeof window !== 'undefined' ? `${window.location.origin}/send/${session.user?.username}` : `https://yourdomain.com/send/${session.user?.username}`}
+                    </code>
+                    <button
+                      onClick={async () => {
+                        const link = typeof window !== 'undefined' ? `${window.location.origin}/send/${session.user?.username}` : '';
+                        if (link && navigator.clipboard) {
+                          try {
+                            await navigator.clipboard.writeText(link);
+                            setCopied(true);
+                            setTimeout(() => setCopied(false), 2000);
+                          } catch (err) {
+                            console.error('Failed to copy:', err);
+                          }
+                        }
+                      }}
+                      className="px-4 py-2 bg-gradient-to-r from-teal-500 to-emerald-600 text-white rounded-lg hover:from-teal-600 hover:to-emerald-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2 whitespace-nowrap"
+                      title="Copy link"
+                    >
+                      {copied ? (
+                        <>
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          Copied!
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                          Copy
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500">
+                  Anyone with this link can send you anonymous messages without logging in
                 </p>
               </div>
             </div>

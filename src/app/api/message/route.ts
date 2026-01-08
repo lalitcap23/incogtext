@@ -46,16 +46,31 @@ export async function POST(request: Request) {
     }
 
     // Add message to user's messages array
-    user.messages.push({
+    const newMessage = {
       content: validationResult.data.content,
       createdAt: new Date(),
-    });
+    };
+    
+    user.messages.push(newMessage);
 
-    await user.save();
+    // Save user with the new message
+    const savedUser = await user.save();
+
+    // Verify the message was saved
+    if (!savedUser || !savedUser.messages || savedUser.messages.length === 0) {
+      console.error("Failed to save message to database");
+      return Response.json({
+        success: false,
+        message: "Failed to save message",
+      } as ApiResponse, { status: 500 });
+    }
+
+    console.log(`Message saved successfully for user: ${username}. Total messages: ${savedUser.messages.length}`);
 
     return Response.json({
       success: true,
       message: "Message sent successfully",
+      messageId: savedUser.messages[savedUser.messages.length - 1]._id,
     } as ApiResponse, { status: 200 });
 
   } catch (error) {

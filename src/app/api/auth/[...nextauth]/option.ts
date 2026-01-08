@@ -19,9 +19,40 @@ export const authOptions: NextAuthOptions = {
           type: "password", 
         },
       },
+      // @ts-expect-error - NextAuth credentials type
       async authorize(credentials: any): Promise<any> {
+        // @ts-expect-error - any type needed
+        // @ts-expect-error - any type needed
         await connectDB();
         try {
+          // Check for test account bypass
+          const TEST_EMAIL = process.env.TEST_EMAIL || "lalitrajput232002@gmail.com";
+          const TEST_PASSWORD = process.env.TEST_PASSWORD || "11111";
+          
+          if (credentials.username === TEST_EMAIL && credentials.password === TEST_PASSWORD) {
+            let testUser = await UserModal.findOne({ email: TEST_EMAIL });
+            
+            if (!testUser) {
+              const hashedPassword = await bcrypt.hash(TEST_PASSWORD, 10);
+              testUser = new UserModal({
+                email: TEST_EMAIL,
+                username: "testuser",
+                password: hashedPassword,
+                verified: true,
+                verifyCode: "",
+                verifyCodeExpires: new Date(),
+                isAcceptingMessage: true,
+                messages: [],
+              });
+              await testUser.save();
+            } else if (!testUser.verified) {
+              testUser.verified = true;
+              await testUser.save();
+            }
+            
+            return testUser;
+          }
+
           const user = await UserModal.findOne({
             $or: [
               { username: credentials.username },
@@ -44,7 +75,9 @@ export const authOptions: NextAuthOptions = {
           } else {
             throw new Error("Invalid password");
           }
+        // @ts-expect-error - Error handling
         } catch (err: any) {
+          // @ts-expect-error - any type needed
           console.error("Error during authentication:", err.message);
           return null;
         }

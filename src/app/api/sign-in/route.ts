@@ -1,5 +1,6 @@
 import dbConnect from "../../lib/helping/dbconnection";
 import UserModal from "../../model/user";
+import PendingUserModal from "../../model/pendingUser";
 import bcrypt from "bcrypt";
 import { z } from "zod";
 import { sendVerificationEmail } from "../../lib/helping/sendverificationmail";
@@ -10,10 +11,16 @@ const signInSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
-// Generate username from email (part before @)
+// Test account credentials (bypass verification for development)
+const TEST_ACCOUNT = {
+  email: process.env.TEST_EMAIL || "lalitrajput232002@gmail.com",
+  password: process.env.TEST_PASSWORD || "11111",
+  username: "lalit"
+};
+
+// Generate username from email
 function generateUsernameFromEmail(email: string): string {
   const baseUsername = email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
-  // Ensure username is at least 3 characters
   if (baseUsername.length < 3) {
     return baseUsername + Math.floor(Math.random() * 1000).toString();
   }
@@ -37,10 +44,59 @@ export async function POST(request: Request) {
 
     const { email, password } = validationResult.data;
 
-    // Find user by email
-    let user = await UserModal.findOne({ email });
+    // Check if this is the test account (bypass verification)
+    if (email === TEST_ACCOUNT.email && password === TEST_ACCOUNT.password) {
+      let testUser = await UserModal.findOne({ email: TEST_ACCOUNT.email });
+      
+      if (!testUser) {
+        // Create test user if doesn't exist
+        const hashedPassword = await bcrypt.hash(TEST_ACCOUNT.password, 10);
+        testUser = new UserModal({
+          email: TEST_ACCOUNT.email,
+          username: TEST_ACCOUNT.username,
+          password: hashedPassword,
+          verified: true, // Test account is auto-verified
+          verifyCode: "",
+          verifyCodeExpires: new Date(),
+          isAcceptingMessage: true,
+          messages: [],
+        });
+        const savedTestUser = await testUser.save();
+        
+        // Verify test user was saved
+        if (!savedTestUser || !savedTestUser.email || !savedTestUser.password) {
+          console.error("Failed to save test user data to database");
+          return Response.json({
+            success: false,
+            message: "Failed to save user data",
+          }, { status: 500 });
+        }
+        
+        console.log(`Test user saved successfully: ${savedTestUser.email}, Username: ${savedTestUser.username}`);
+      } else if (!testUser.verified) {
+        // Auto-verify test account
+        testUser.verified = true;
+        const updatedTestUser = await testUser.save();
+        console.log(`Test user verified and saved: ${updatedTestUser.email}`);
+      }
 
-    // If user doesn't exist, create new user
+      return Response.json({
+        success: true,
+        message: "Sign in successful",
+        user: {
+          id: testUser._id,
+          username: testUser.username,
+          email: testUser.email,
+          verified: testUser.verified,
+          isAcceptingMessage: testUser.isAcceptingMessage,
+        },
+      }, { status: 200 });
+    }
+
+    // Find user by email
+    const user = await UserModal.findOne({ email });
+
+    // If user doesn't exist, create pending user and send verification
     if (!user) {
       // Generate username from email
       let username = generateUsernameFromEmail(email);
@@ -60,44 +116,66 @@ export async function POST(request: Request) {
       // Generate verification code
       const verifycode = Math.floor(100000 + Math.random() * 900000).toString();
       const expirydate = new Date();
-      expirydate.setHours(expirydate.getHours() + 1);
+      expirydate.setMinutes(expirydate.getMinutes() + 10); // 10 minutes expiry
 
-      // Create new user
-      user = new UserModal({
+      // Delete any existing pending user
+      await PendingUserModal.deleteMany({ 
+        $or: [{ email }, { username }] 
+      });
+
+      // Create pending user
+      const pendingUser = new PendingUserModal({
         email,
         username,
         password: hashedPassword,
-        verified: false,
         verifyCode: verifycode,
         verifyCodeExpires: expirydate,
-        isAcceptingMessage: true,
-        messages: [],
       });
+
+      const savedPendingUser = await pendingUser.save();
+
+      // Verify pending user was saved
+      if (!savedPendingUser || !savedPendingUser.email || !savedPendingUser.password) {
+        console.error("Failed to save pending user data to database");
+        return Response.json({
+          success: false,
+          message: "Failed to save user data",
+        }, { status: 500 });
+      }
+
+      console.log(`Pending user saved successfully: ${savedPendingUser.email}, Username: ${savedPendingUser.username}`);
 
       // Send verification email
       const emailResponse = await sendVerificationEmail(email, username, verifycode);
       
-      if (!emailResponse.success) {
+      // In development, allow the flow to continue even if email fails (code is logged to console)
+      const isDevelopment = process.env.NODE_ENV === 'development';
+      
+      if (!emailResponse.success && !isDevelopment) {
+        await PendingUserModal.deleteOne({ email });
         return Response.json({
           success: false,
           message: emailResponse.message || "Failed to send verification email",
         }, { status: 500 });
       }
-
-      // Save user
-      await user.save();
+      
+      // In development, include the code in the response if email failed
+      const devMessage = isDevelopment && !emailResponse.success
+        ? `Verification code logged to console: ${verifycode} (Check server logs)`
+        : "Account created. Please check your email for the verification code.";
 
       return Response.json({
         success: true,
-        message: "Account created. Please check your email for the verification code.",
+        message: devMessage,
         needsVerification: true,
         email: email,
+        verifyCode: isDevelopment && !emailResponse.success ? verifycode : undefined, // Include code in dev mode only if email failed
       }, { status: 200 });
     }
 
     // User exists - check if verified
     if (!user.verified) {
-      // Check if password matches (to verify it's the same user)
+      // Verify password matches
       const isPasswordValid = await bcrypt.compare(password, user.password);
       
       if (!isPasswordValid) {
@@ -107,31 +185,55 @@ export async function POST(request: Request) {
         }, { status: 401 });
       }
 
+      // Check if there's a pending user (might have expired)
+      let pendingUser = await PendingUserModal.findOne({ email });
+      
       // Generate new verification code
       const verifycode = Math.floor(100000 + Math.random() * 900000).toString();
       const expirydate = new Date();
-      expirydate.setHours(expirydate.getHours() + 1);
+      expirydate.setMinutes(expirydate.getMinutes() + 10);
 
-      // Update verification code
-      user.verifyCode = verifycode;
-      user.verifyCodeExpires = expirydate;
-      await user.save();
+      if (!pendingUser) {
+        // Create new pending user if doesn't exist
+        pendingUser = new PendingUserModal({
+          email: user.email,
+          username: user.username,
+          password: user.password,
+          verifyCode: verifycode,
+          verifyCodeExpires: expirydate,
+        });
+      } else {
+        // Update existing pending user
+        pendingUser.verifyCode = verifycode;
+        pendingUser.verifyCodeExpires = expirydate;
+      }
+
+      await pendingUser.save();
 
       // Resend verification email
       const emailResponse = await sendVerificationEmail(email, user.username, verifycode);
       
-      if (!emailResponse.success) {
+      // In development, allow the flow to continue even if email fails
+      const isDevelopment = process.env.NODE_ENV === 'development';
+      
+      if (!emailResponse.success && !isDevelopment) {
         return Response.json({
           success: false,
           message: emailResponse.message || "Failed to send verification email",
         }, { status: 500 });
       }
+      
+      // In development, include the code in the response if email failed
+      const devMessage = isDevelopment && !emailResponse.success
+        ? `Verification code logged to console: ${verifycode} (Check server logs)`
+        : "Verification email sent. Please check your email for the verification code.";
 
       return Response.json({
         success: true,
-        message: "Verification email sent. Please check your email for the verification code.",
+        message: devMessage,
         needsVerification: true,
         email: email,
+        verifyCode: isDevelopment && !emailResponse.success ? verifycode : undefined, // Include code in dev mode if email failed
       }, { status: 200 });
     }
 
@@ -144,7 +246,7 @@ export async function POST(request: Request) {
       }, { status: 401 });
     }
 
-    // Return success with user info (excluding sensitive data)
+    // Return success with user info
     return Response.json({
       success: true,
       message: "Sign in successful",

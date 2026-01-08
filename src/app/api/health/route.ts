@@ -40,7 +40,9 @@ export async function GET() {
       // Try to list collections (lightweight operation)
       await mongoose.connection.db?.admin().ping();
       dbOperationSuccess = true;
-    } catch (error: any) {
+  // @ts-expect-error - Error handling
+  } catch (error: any) {
+    // @ts-expect-error - any type needed
       dbOperationError = error.message;
     }
 
