@@ -115,6 +115,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## API Routes
 
+- `GET /api/health` - Check MongoDB connection status
 - `POST /api/sign-up` - User registration
 - `POST /api/sign-in` - User sign in
 - `POST /api/verify` - Email verification
@@ -145,6 +146,33 @@ src/app/
 └── type/                       # TypeScript types
 ```
 
+## Check MongoDB Connection
+
+### Method 1: Health Check API (Recommended)
+1. Start your development server: `npm run dev`
+2. Open your browser or use curl:
+   ```bash
+   curl http://localhost:3000/api/health
+   ```
+3. Or visit: `http://localhost:3000/api/health` in your browser
+
+The response will show:
+- ✅ `"connected": true` - MongoDB is connected
+- ❌ `"connected": false` - MongoDB connection failed (check error message)
+
+### Method 2: Check Server Logs
+When you start the server, look for these messages in the console:
+- ✅ `"MongoDB connected successfully"` - Connection working
+- ❌ `"MongoDB connection error"` - Connection failed
+
+### Method 3: Test Script
+Run the test script:
+```bash
+node check-mongodb.js
+```
+
+This will test the connection and provide detailed error messages if it fails.
+
 ## Troubleshooting
 
 ### Email not received?
@@ -154,9 +182,15 @@ src/app/
 - Ensure email domain is verified in Resend (for production)
 
 ### MongoDB connection error?
-- Verify MONGODB_URI is correct
-- Check if MongoDB is running (for local)
-- Ensure network access is allowed (for Atlas)
+- **Check MONGODB_URI**: Verify the connection string is correct in `.env.local`
+- **Local MongoDB**: Ensure MongoDB service is running (`sudo systemctl status mongod` or `brew services list`)
+- **MongoDB Atlas**: 
+  - Check if your IP is whitelisted in Network Access
+  - Verify database user credentials
+  - Ensure cluster is running (not paused)
+- **Connection timeout**: Check firewall settings or network connectivity
+- **Authentication failed**: Verify username and password in connection string
+- **Use the health check**: Visit `/api/health` to see detailed connection status
 
 ### Authentication not working?
 - Verify NEXTAUTH_SECRET is set

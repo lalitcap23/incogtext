@@ -7,12 +7,12 @@ export async function POST(request: Request) {
   try {
     await dbConnect();
     const body = await request.json();
-    const { username, code } = body;
+    const { email, code } = body;
 
-    if (!username || !code) {
+    if (!email || !code) {
       return Response.json({
         success: false,
-        message: "Username and verification code are required",
+        message: "Email and verification code are required",
       } as ApiResponse, { status: 400 });
     }
 
@@ -26,8 +26,8 @@ export async function POST(request: Request) {
       } as ApiResponse, { status: 400 });
     }
 
-    // Find user by username
-    const user = await UserModal.findOne({ username });
+    // Find user by email
+    const user = await UserModal.findOne({ email });
 
     if (!user) {
       return Response.json({
@@ -69,6 +69,12 @@ export async function POST(request: Request) {
     return Response.json({
       success: true,
       message: "Email verified successfully",
+      user: {
+        id: user._id,
+        email: user.email,
+        username: user.username,
+        verified: user.verified,
+      },
     } as ApiResponse, { status: 200 });
 
   } catch (error) {

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { signIn } from 'next-auth/react';
 import Link from 'next/link';
 import { verifySchema } from '../schemas/verifySchema';
 import { z } from 'zod';
@@ -9,7 +10,7 @@ import { z } from 'zod';
 function VerifyForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const username = searchParams.get('username') || '';
+  const email = searchParams.get('email') || '';
   
   const [code, setCode] = useState('');
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -17,10 +18,10 @@ function VerifyForm() {
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    if (!username) {
-      router.push('/sign-up');
+    if (!email) {
+      router.push('/sign-in');
     }
-  }, [username, router]);
+  }, [email, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, '').slice(0, 6);
@@ -45,16 +46,17 @@ function VerifyForm() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username, code }),
+        body: JSON.stringify({ email, code }),
       });
 
       const data = await response.json();
 
       if (data.success) {
         setSuccess(true);
+        // Redirect to dashboard after verification
         setTimeout(() => {
-          router.push('/sign-in');
-        }, 2000);
+          router.push('/dashboard');
+        }, 1500);
       } else {
         setErrors({ general: data.message || 'Verification failed' });
       }
@@ -77,11 +79,11 @@ function VerifyForm() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-teal-50 to-emerald-50 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
-          <div className="bg-green-50 border border-green-400 text-green-700 px-4 py-3 rounded">
-            <p className="font-semibold">Email verified successfully!</p>
-            <p className="mt-2">Redirecting to sign in page...</p>
+          <div className="bg-emerald-50 border-2 border-emerald-400 text-emerald-800 px-6 py-4 rounded-2xl shadow-lg">
+            <p className="font-semibold text-lg">Email verified successfully!</p>
+            <p className="mt-2">Redirecting to dashboard...</p>
           </div>
         </div>
       </div>
@@ -89,24 +91,32 @@ function VerifyForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-teal-50 to-emerald-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+        <div className="text-center">
+          <Link href="/" className="inline-flex items-center space-x-2 mb-6">
+            <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-xl">I</span>
+            </div>
+            <span className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-emerald-600 bg-clip-text text-transparent">
+              IncogText
+            </span>
+          </Link>
+          <h2 className="text-3xl font-extrabold text-gray-900">
             Verify Your Email
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             Enter the 6-digit code sent to your email
           </p>
-          {username && (
-            <p className="mt-1 text-center text-sm text-gray-500">
-              Verifying: <span className="font-semibold">{username}</span>
+          {email && (
+            <p className="mt-3 text-center text-sm text-gray-500 bg-teal-50 px-4 py-2 rounded-lg inline-block">
+              Verifying: <span className="font-semibold text-teal-700">{email}</span>
             </p>
           )}
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <form className="mt-8 space-y-6 bg-white p-8 rounded-2xl shadow-xl border border-teal-100" onSubmit={handleSubmit}>
           <div>
-            <label htmlFor="code" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="code" className="block text-sm font-semibold text-gray-700 mb-3">
               Verification Code
             </label>
             <input
@@ -115,18 +125,18 @@ function VerifyForm() {
               type="text"
               required
               maxLength={6}
-              className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm text-center text-2xl tracking-widest"
+              className="appearance-none relative block w-full px-4 py-4 border-2 border-gray-200 placeholder-gray-400 text-gray-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-200 focus:border-teal-500 transition-all text-center text-3xl tracking-[0.5em] font-mono"
               placeholder="000000"
               value={code}
               onChange={handleChange}
             />
             {errors.code && (
-              <p className="mt-1 text-sm text-red-600">{errors.code}</p>
+              <p className="mt-2 text-sm text-red-600">{errors.code}</p>
             )}
           </div>
 
           {errors.general && (
-            <div className="rounded-md bg-red-50 p-4">
+            <div className="rounded-xl bg-red-50 border-2 border-red-200 p-4">
               <p className="text-sm text-red-600">{errors.general}</p>
             </div>
           )}
@@ -135,7 +145,7 @@ function VerifyForm() {
             <button
               type="submit"
               disabled={isLoading || code.length !== 6}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-base font-semibold rounded-xl text-white bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
             >
               {isLoading ? 'Verifying...' : 'Verify Email'}
             </button>
@@ -144,8 +154,8 @@ function VerifyForm() {
           <div className="text-center">
             <p className="text-sm text-gray-600">
               Didn't receive the code?{' '}
-              <Link href="/sign-up" className="font-medium text-indigo-600 hover:text-indigo-500">
-                Sign up again
+              <Link href="/sign-in" className="font-medium text-teal-600 hover:text-teal-700">
+                Try again
               </Link>
             </p>
           </div>
