@@ -46,12 +46,10 @@ export async function POST(request: Request) {
     }
 
     // Add message to user's messages array
-    const newMessage = {
+    user.messages.push({
       content: validationResult.data.content,
       createdAt: new Date(),
-    };
-    
-    user.messages.push(newMessage);
+    } as any);
 
     // Save user with the new message
     const savedUser = await user.save();

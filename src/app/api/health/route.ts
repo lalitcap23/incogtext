@@ -40,9 +40,7 @@ export async function GET() {
       // Try to list collections (lightweight operation)
       await mongoose.connection.db?.admin().ping();
       dbOperationSuccess = true;
-  // @ts-expect-error - Error handling
-  } catch (error: any) {
-    // @ts-expect-error - any type needed
+    } catch (error: any) {
       dbOperationError = error.message;
     }
 
@@ -61,12 +59,13 @@ export async function GET() {
         : `MongoDB connection issue: ${dbOperationError || "Connection state: " + states[connectionState as keyof typeof states]}`,
     }, { status: isConnected && dbOperationSuccess ? 200 : 500 });
 
-  } catch (error: any) {
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Failed to connect to MongoDB";
     return Response.json({
       status: "error",
       connected: false,
-      message: error.message || "Failed to connect to MongoDB",
-      error: error.message,
+      message: errorMessage,
+      error: errorMessage,
     }, { status: 500 });
   }
 }

@@ -60,11 +60,9 @@ async function dbConnect(): Promise<void> {
             connection.isConnected = 0;
         });
 
-    // @ts-expect-error - Error handling
-    } catch (error: any) {
-      // @ts-expect-error - any type needed
-      // @ts-expect-error - any type needed
-        console.error("MongoDB connection error:", (error as any).message);
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        console.error("MongoDB connection error:", errorMessage);
         connection.isConnected = 0;
         throw error;
     }

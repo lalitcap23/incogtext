@@ -11,7 +11,6 @@ export async function sendVerificationEmail(
         // In development, if Resend fails, log the code to console instead
         const isDevelopment = process.env.NODE_ENV === 'development';
         
-        // @ts-expect-error - Resend API types
         const { error } = await resend.emails.send({
             from: 'IncogText <onboarding@resend.dev>',
             to: [email], 
@@ -23,7 +22,7 @@ export async function sendVerificationEmail(
             console.error("Resend API error:", error);
             
             // In development, if it's a testing email restriction, log code to console
-            if (isDevelopment && error.statusCode === 403) {
+            if (isDevelopment && 'statusCode' in error && error.statusCode === 403) {
                 console.log("\n=== EMAIL VERIFICATION CODE (DEV MODE) ===");
                 console.log(`Email: ${email}`);
                 console.log(`Verification Code: ${verifycode}`);
@@ -42,11 +41,8 @@ export async function sendVerificationEmail(
         }
 
         return { success: true, message: "Verification email sent successfully" };
-    // @ts-expect-error - Error handling
-    } catch (error: any) {
-      // @ts-expect-error - any type needed
-      // @ts-expect-error - any type needed
-        console.error("Error sending verification email:", (error as any));
+    } catch (error) {
+        console.error("Error sending verification email:", error);
         
         // In development, log code to console as fallback
         const isDevelopment = process.env.NODE_ENV === 'development';
@@ -63,6 +59,5 @@ export async function sendVerificationEmail(
         }
         
         return { success: false, message: "Failed to send verification email" };
-    // @ts-expect-error - any type needed
     }
 }

@@ -4,6 +4,8 @@ import dbConnect from "../../lib/helping/dbconnection";
 import UserModal from "../../model/user";
 import { ApiResponse } from "../../type/ApiResponse";
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);

@@ -21,28 +21,27 @@ export default function SendMessagePage() {
   const [isAcceptingMessages, setIsAcceptingMessages] = useState(true);
 
   useEffect(() => {
-    if (username) {
-      checkUserStatus();
-    }
-    // @ts-expect-error - useEffect deps
-  }, [username]);
-
-  const checkUserStatus = async () => {
-    try {
-      // Check if user exists and is accepting messages
-      const response = await fetch(`/api/check-user?username=${encodeURIComponent(username)}`);
-      const data = await response.json();
+    const checkUserStatus = async () => {
+      if (!username) return;
       
-      if (data.success) {
-        setUserExists(true);
-        setIsAcceptingMessages(data.isAcceptingMessage);
-      } else {
-        setUserExists(false);
+      try {
+        // Check if user exists and is accepting messages
+        const response = await fetch(`/api/check-user?username=${encodeURIComponent(username)}`);
+        const data = await response.json();
+        
+        if (data.success) {
+          setUserExists(true);
+          setIsAcceptingMessages(data.isAcceptingMessage);
+        } else {
+          setUserExists(false);
+        }
+      } catch (error) {
+        console.error('Error checking user status:', error);
       }
-    } catch (error) {
-      console.error('Error checking user status:', error);
-    }
-  };
+    };
+
+    checkUserStatus();
+  }, [username]);
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;

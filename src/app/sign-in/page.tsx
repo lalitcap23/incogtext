@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useCallback } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -24,25 +24,7 @@ function SignInForm() {
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   const [isLoading, setIsLoading] = useState(false);
   
-  // Auto-attempt sign-in after verification if email is provided
-  useEffect(() => {
-    if (isVerified && verifiedEmail && typeof window !== 'undefined') {
-      // Get password from sessionStorage (stored before redirecting to verify)
-      const storedPassword = sessionStorage.getItem('pendingPassword');
-      if (storedPassword) {
-        setFormData(prev => ({ ...prev, email: verifiedEmail, password: storedPassword }));
-        // Clear stored password
-        sessionStorage.removeItem('pendingPassword');
-        // Auto-submit after a short delay
-        setTimeout(() => {
-          handleAutoSignIn(verifiedEmail, storedPassword);
-        }, 500);
-      }
-    }
-    // @ts-expect-error - useEffect deps
-  }, [isVerified, verifiedEmail]);
-  
-  const handleAutoSignIn = async (email: string, password: string) => {
+  const handleAutoSignIn = useCallback(async (email: string, password: string) => {
     setIsLoading(true);
     try {
       const apiResponse = await fetch('/api/sign-in', {
@@ -68,7 +50,24 @@ function SignInForm() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [router]);
+  
+  // Auto-attempt sign-in after verification if email is provided
+  useEffect(() => {
+    if (isVerified && verifiedEmail && typeof window !== 'undefined') {
+      // Get password from sessionStorage (stored before redirecting to verify)
+      const storedPassword = sessionStorage.getItem('pendingPassword');
+      if (storedPassword) {
+        setFormData(prev => ({ ...prev, email: verifiedEmail, password: storedPassword }));
+        // Clear stored password
+        sessionStorage.removeItem('pendingPassword');
+        // Auto-submit after a short delay
+        setTimeout(() => {
+          handleAutoSignIn(verifiedEmail, storedPassword);
+        }, 500);
+      }
+    }
+  }, [isVerified, verifiedEmail, handleAutoSignIn]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;

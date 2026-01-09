@@ -19,10 +19,7 @@ export const authOptions: NextAuthOptions = {
           type: "password", 
         },
       },
-      // @ts-expect-error - NextAuth credentials type
       async authorize(credentials: any): Promise<any> {
-        // @ts-expect-error - any type needed
-        // @ts-expect-error - any type needed
         await connectDB();
         try {
           // Check for test account bypass
@@ -75,9 +72,7 @@ export const authOptions: NextAuthOptions = {
           } else {
             throw new Error("Invalid password");
           }
-        // @ts-expect-error - Error handling
         } catch (err: any) {
-          // @ts-expect-error - any type needed
           console.error("Error during authentication:", err.message);
           return null;
         }
@@ -85,7 +80,7 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   pages: {
-    signIn: '/Sign-in',
+    signIn: '/sign-in',
   },
   session: {
     strategy: "jwt",
