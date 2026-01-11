@@ -181,6 +181,109 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Try Anonymous Messages Section */}
+      <section className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-gradient-to-br from-teal-50 to-emerald-50 rounded-3xl p-8 md:p-10 border-2 border-teal-200 shadow-xl">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                Try Sending Anonymous Messages
+              </h2>
+              <p className="text-lg text-gray-600 mb-6">
+                Test our platform by sending anonymous messages to the admin
+              </p>
+            </div>
+            
+            <div className="grid md:grid-cols-2 gap-4 mb-8">
+              <Link
+                href="/send/lalitrajput230202"
+                className="group bg-white rounded-2xl p-6 border-2 border-teal-200 hover:border-teal-400 hover:shadow-lg transition-all duration-300 hover:scale-105"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-lg font-semibold text-gray-900 group-hover:text-teal-600 transition-colors">
+                    @lalitrajput230202
+                  </h3>
+                  <svg className="w-5 h-5 text-teal-600 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </div>
+                <p className="text-sm text-gray-600">Send anonymous message to admin</p>
+              </Link>
+              
+              <Link
+                href="/send/lalitrajput232002"
+                className="group bg-white rounded-2xl p-6 border-2 border-teal-200 hover:border-teal-400 hover:shadow-lg transition-all duration-300 hover:scale-105"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-lg font-semibold text-gray-900 group-hover:text-teal-600 transition-colors">
+                    @lalitrajput232002
+                  </h3>
+                  <svg className="w-5 h-5 text-teal-600 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </div>
+                <p className="text-sm text-gray-600">Send anonymous message to admin</p>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works Guide */}
+      <section className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 py-16 bg-gradient-to-b from-gray-50 to-white">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              How It Works
+            </h2>
+            <p className="text-lg text-gray-600">
+              Get started in three simple steps
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="bg-white rounded-2xl p-8 border-2 border-gray-200 hover:border-teal-400 hover:shadow-xl transition-all duration-300 text-center">
+              <div className="w-16 h-16 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-6 text-white text-2xl font-bold shadow-lg">
+                1
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Sign In</h3>
+              <p className="text-gray-600 leading-relaxed">
+                Create your account or sign in to get started. It&apos;s quick, free, and secure.
+              </p>
+              <Link
+                href="/sign-in"
+                className="mt-6 inline-flex items-center text-teal-600 hover:text-teal-700 font-semibold transition-colors"
+              >
+                Get Started
+                <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </Link>
+            </div>
+
+            <div className="bg-white rounded-2xl p-8 border-2 border-gray-200 hover:border-teal-400 hover:shadow-xl transition-all duration-300 text-center">
+              <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center mx-auto mb-6 text-white text-2xl font-bold shadow-lg">
+                2
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Get Your Link</h3>
+              <p className="text-gray-600 leading-relaxed">
+                After signing in, visit your dashboard to get your unique anonymous message link.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-2xl p-8 border-2 border-gray-200 hover:border-teal-400 hover:shadow-xl transition-all duration-300 text-center">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-2xl flex items-center justify-center mx-auto mb-6 text-white text-2xl font-bold shadow-lg">
+                3
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Share & Receive</h3>
+              <p className="text-gray-600 leading-relaxed">
+                Share your link anywhere. People can send you anonymous messages without revealing their identity.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Quick Message Form */}
       {showMessageForm && (
         <section className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 py-12 animate-slide-up">
@@ -422,63 +525,6 @@ export default function LandingPage() {
                 <div className="text-4xl mb-4">{useCase.icon}</div>
                 <h3 className="text-lg font-bold text-gray-900 mb-3">{useCase.title}</h3>
                 <p className="text-sm text-gray-600 leading-relaxed">{useCase.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works Section */}
-      <section className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 py-24 bg-gradient-to-b from-gray-50 to-white">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-black mb-6 text-gray-900">
-              How It
-              <span className="block mt-2 bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-500 bg-clip-text text-transparent">
-                Works
-              </span>
-            </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Get started in three simple steps
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {[
-              {
-                step: '01',
-                title: 'Create Your Account',
-                description: 'Sign up for free in seconds. Choose your unique username that others will use to send you messages.',
-                color: 'from-purple-500 to-pink-500'
-              },
-              {
-                step: '02',
-                title: 'Share Your Link',
-                description: 'Get your personal anonymous message link and share it on social media, bio, or with specific people.',
-                color: 'from-blue-500 to-cyan-500'
-              },
-              {
-                step: '03',
-                title: 'Receive Messages',
-                description: 'Start receiving anonymous messages instantly. Read, manage, and respond to feedback on your dashboard.',
-                color: 'from-teal-500 to-emerald-500'
-              }
-            ].map((step, index) => (
-              <div key={index} className="relative">
-                <div className="bg-white rounded-2xl p-8 border-2 border-gray-200 hover:border-teal-400 transition-all duration-300 hover:shadow-xl">
-                  <div className={`text-6xl font-black bg-gradient-to-r ${step.color} bg-clip-text text-transparent mb-4 opacity-20`}>
-                    {step.step}
-                  </div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-4">{step.title}</h3>
-                  <p className="text-gray-600 leading-relaxed">{step.description}</p>
-                </div>
-                {index < 2 && (
-                  <div className="hidden md:block absolute top-1/2 -right-4 transform -translate-y-1/2">
-                    <svg className="w-8 h-8 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                    </svg>
-                  </div>
-                )}
               </div>
             ))}
           </div>
