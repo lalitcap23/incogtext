@@ -4,3 +4,4 @@ export async function GET() {
   await dbConnect();
   return Response.json({ status: "ok" });
 }
+ 
