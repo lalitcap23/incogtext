@@ -1,5 +1,4 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "../auth/[...nextauth]/option";
+import { auth } from "@clerk/nextjs/server";
 import dbConnect from "../../lib/helping/dbconnection";
 import UserModal from "../../model/user";
 import { ApiResponse } from "../../type/ApiResponse";
@@ -8,9 +7,9 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
+    const { userId } = await auth();
 
-    if (!session || !session.user) {
+    if (!userId) {
       return Response.json({
         success: false,
         message: "Unauthorized",
@@ -18,8 +17,7 @@ export async function GET() {
     }
 
     await dbConnect();
-    const userId = session.user._id;
-    const user = await UserModal.findById(userId).select("-password -verifyCode");
+    const user = await UserModal.findOne({ clerkId: userId });
 
     if (!user) {
       return Response.json({
@@ -101,6 +99,7 @@ export async function GET() {
       success: true,
       messages: messages,
       isAcceptingMessage: user.isAcceptingMessage,
+      username: user.username,
       statistics: {
         totalMessages,
         avgMessagesPerDay: parseFloat(avgMessagesPerDay),

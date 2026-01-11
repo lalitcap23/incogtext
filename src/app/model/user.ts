@@ -18,51 +18,35 @@ createdAt:{
 },
 })
 export interface user extends Document{
+    clerkId: string;
     username: string;
     email: string;
-    password: string;
-    verifyCode: string;
-    verifyCodeExpires: Date;
     isAcceptingMessage: boolean;
     messages: Message[];
-    verified: boolean;
 }
 const userSchema: Schema<user> = new Schema({
+    clerkId: {
+        type: String,
+        required: [true, "Clerk ID is required"],
+        unique: true,
+        trim: true,
+    },
     username: {
         type: String,
-        required: [true, "User is not found"],
+        required: [true, "Username is required"],
         trim: true,
         unique: true, 
     },
     email:{
         type: String,
-        required: [true, "^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$"],
+        required: [true, "Email is required"],
         trim: true,
         unique: true,
         match:[ /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/g, 'Please enter a valid email address'],
     },
-    password:{
-        type: String,
-        required: [true, "Password is not valid"],
-        trim: true,
-    },
-    verifyCode:{    
-        type: String,
-        required: [true, "Verification code is not valid"],
-        
-    },
-    verifyCodeExpires:{
-        type: Date,
-        required: [true, "Verification code is not valid"],
-        
-    },
-    verified:{
-        type: Boolean,
-        default: false,
-    },
     isAcceptingMessage:{
         type: Boolean,
-        default: false,
+        default: true,
     },
     messages: [MessageSchema],  
 })

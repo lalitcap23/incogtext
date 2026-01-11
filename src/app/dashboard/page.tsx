@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSession, signOut } from 'next-auth/react';
+import { useAuth, SignOutButton } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -23,7 +23,7 @@ type SortOrder = 'newest' | 'oldest';
 type ChartView = 'day' | 'week' | 'month';
 
 export default function DashboardPage() {
-  const { data: session, status } = useSession();
+  const { isSignedIn, userId } = useAuth();
   const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
   const [sortedMessages, setSortedMessages] = useState<Message[]>([]);
@@ -32,21 +32,25 @@ export default function DashboardPage() {
   const [isToggling, setIsToggling] = useState(false);
   const [copied, setCopied] = useState(false);
   const [statistics, setStatistics] = useState<Statistics | null>(null);
+  const [username, setUsername] = useState<string>('');
   const [sortOrder, setSortOrder] = useState<SortOrder>('newest');
   const [chartView, setChartView] = useState<ChartView>('day');
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
+    if (!isSignedIn) {
       router.push('/sign-in');
+    } else if (userId) {
+      // Sync user to MongoDB and fetch messages
+      fetch('/api/sync-user', {
+        method: 'POST',
+      }).then(() => {
+        fetchMessages();
+      }).catch((error) => {
+        console.error('Error syncing user:', error);
+        fetchMessages();
+      });
     }
-  }, [status, router]);
-
-  useEffect(() => {
-    if (session) {
-      fetchMessages();
-      setIsAcceptingMessages(session.user?.isAcceptingMessage ?? true);
-    }
-  }, [session]);
+  }, [isSignedIn, userId, router]);
 
   useEffect(() => {
     const sorted = [...messages].sort((a, b) => {
@@ -64,6 +68,7 @@ export default function DashboardPage() {
       if (data.success) {
         setMessages(data.messages || []);
         setIsAcceptingMessages(data.isAcceptingMessage ?? true);
+        setUsername(data.username || '');
         if (data.statistics) {
           setStatistics(data.statistics);
         }
@@ -120,16 +125,12 @@ export default function DashboardPage() {
     }
   };
 
-  if (status === 'loading' || isLoading) {
+  if (!isSignedIn || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-xl">Loading...</div>
       </div>
     );
-  }
-
-  if (!session) {
-    return null;
   }
 
   return (
@@ -139,14 +140,13 @@ export default function DashboardPage() {
           <div className="flex justify-between items-center mb-6">
             <div>
               <h1 className="text-4xl font-bold bg-gradient-to-r from-teal-600 to-emerald-600 bg-clip-text text-transparent">Dashboard</h1>
-              <p className="text-gray-600 mt-2 text-lg">Welcome back, {session.user?.username || 'User'}!</p>
+              <p className="text-gray-600 mt-2 text-lg">Welcome back, {username || 'User'}!</p>
             </div>
-            <button
-              onClick={() => signOut({ callbackUrl: '/sign-in' })}
-              className="px-6 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all shadow-lg hover:shadow-xl"
-            >
-              Sign Out
-            </button>
+            <SignOutButton>
+              <button className="px-6 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all shadow-lg hover:shadow-xl">
+                Sign Out
+              </button>
+            </SignOutButton>
           </div>
 
           <div className="mt-6 p-6 bg-gradient-to-r from-teal-50 to-emerald-50 rounded-xl border-2 border-teal-200">
@@ -157,11 +157,11 @@ export default function DashboardPage() {
                   <p className="text-sm text-gray-600 mb-2">Share this link to receive anonymous messages:</p>
                   <div className="flex items-center gap-2">
                     <code className="flex-1 bg-gray-50 px-4 py-2 rounded-lg text-sm font-mono text-teal-700 break-all">
-                      {typeof window !== 'undefined' ? `${window.location.origin}/send/${session.user?.username}` : `https://yourdomain.com/send/${session.user?.username}`}
+                      {typeof window !== 'undefined' && username ? `${window.location.origin}/send/${username}` : `https://yourdomain.com/send/${username || 'username'}`}
                     </code>
                     <button
                       onClick={async () => {
-                        const link = typeof window !== 'undefined' ? `${window.location.origin}/send/${session.user?.username}` : '';
+                        const link = typeof window !== 'undefined' && username ? `${window.location.origin}/send/${username}` : '';
                         if (link && navigator.clipboard) {
                           try {
                             await navigator.clipboard.writeText(link);

@@ -1,15 +1,16 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "../auth/[...nextauth]/option";
+import { auth } from "@clerk/nextjs/server";
 import dbConnect from "../../lib/helping/dbconnection";
 import UserModal from "../../model/user";
 import { acceptMessageSchema } from "../../schemas/acceptMessageSchema";
 import { ApiResponse } from "../../type/ApiResponse";
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const { userId } = await auth();
 
-    if (!session || !session.user) {
+    if (!userId) {
       return Response.json({
         success: false,
         message: "Unauthorized",
@@ -29,8 +30,7 @@ export async function POST(request: Request) {
       } as ApiResponse, { status: 400 });
     }
 
-    const userId = session.user._id;
-    const user = await UserModal.findById(userId);
+    const user = await UserModal.findOne({ clerkId: userId });
 
     if (!user) {
       return Response.json({
