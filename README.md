@@ -1,52 +1,140 @@
-# IncogText - Anonymous Messaging App
+# 🎭 IncogText - Anonymous Messaging Platform
 
-A private messaging application built with Next.js where users can send and receive anonymous messages.
+A modern, privacy-focused anonymous messaging platform built with Next.js 14. Send and receive honest feedback without revealing your identity.
 
-## Features
+![Next.js](https://img.shields.io/badge/Next.js-14.2-black?style=flat-square&logo=next.js)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue?style=flat-square&logo=typescript)
+![MongoDB](https://img.shields.io/badge/MongoDB-6.20-green?style=flat-square&logo=mongodb)
+![Clerk](https://img.shields.io/badge/Clerk-Auth-purple?style=flat-square)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38bdf8?style=flat-square&logo=tailwind-css)
 
-- 🔐 User authentication with NextAuth.js
-- ✉️ Email verification via Resend
-- 💬 Send anonymous messages to users by username
-- 📬 View received messages in dashboard
-- 🎛️ Toggle message acceptance on/off
-- 🔒 Secure password hashing with bcrypt
-- 📱 Responsive UI with Tailwind CSS
+## ✨ Features
 
-## Prerequisites
+- 🔐 **Clerk Authentication** - Secure user authentication with protected routes
+- 💬 **Anonymous Messaging** - Send messages without identity disclosure
+- 📊 **Dashboard Analytics** - Visual statistics with charts (daily/weekly/monthly views)
+- 🎛️ **Message Control** - Toggle message acceptance on/off
+- 🔗 **Shareable Links** - Unique username-based URLs (`/send/username`)
+- ✅ **Validation** - Zod schema validation for all inputs
+- 🎨 **Modern UI** - Responsive design with Tailwind CSS and gradient animations
 
-- Node.js 18+ or Bun
-- MongoDB database (local or MongoDB Atlas)
-- Resend account for email sending
-- Environment variables configured
+## 🛠️ Tech Stack
 
-## Setup Instructions
+**Frontend:** Next.js 14, React 18, TypeScript, Tailwind CSS, Recharts  
+**Backend:** Next.js API Routes, MongoDB, Mongoose, Clerk, Zod
 
-### 1. Install Dependencies
+## � Quick Start
+
+### Prerequisites
+- Node.js 18+
+- MongoDB account ([MongoDB Atlas](https://www.mongodb.com/cloud/atlas))
+- Clerk account ([Clerk.com](https://clerk.com))
+
+### Installation
 
 ```bash
+# Clone and install
+git clone https://github.com/yourusername/incogtext.git
+cd incogtext
 npm install
-# or
-bun install
 ```
 
-### 2. Configure Environment Variables
+### Environment Setup
 
-Create a `.env.local` file in the root directory with the following variables:
+Create a `.env` file:
 
 ```env
-# MongoDB Connection
-MONGODB_URI=your_mongodb_connection_string_here
-
-# NextAuth Configuration
-NEXTAUTH_SECRET=your_nextauth_secret_here
-NEXTAUTH_URL=http://localhost:3000
-
-# Resend API Key for Email
-RESEND_API_KEY=your_resend_api_key_here
-
-# App URL (for email verification links)
-NEXT_PUBLIC_APP_URL=http://localhost:3000
+MONGODB_URI="your_mongodb_connection_string"
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="your_clerk_publishable_key"
+CLERK_SECRET_KEY="your_clerk_secret_key"
 ```
+
+### Run
+
+```bash
+npm run dev  # Development at http://localhost:3000
+npm run build && npm start  # Production
+```
+
+## 📁 Project Structure
+
+```
+src/
+├── app/
+│   ├── api/              # API routes (message, sync-user, get-messages, etc.)
+│   ├── dashboard/        # User dashboard with statistics
+│   ├── send/[username]/  # Send message page
+│   ├── model/            # Mongoose schemas
+│   ├── schemas/          # Zod validation
+│   └── lib/              # Database connection
+└── middleware.ts         # Clerk route protection
+```
+
+## 🎯 How It Works
+
+1. **Sign In** - Authenticate via Clerk (Google, Email)
+2. **Get Your Link** - Share `/send/username` to receive messages
+3. **Receive Messages** - View in dashboard with analytics
+4. **Send Messages** - Anyone can send anonymously (no login required)
+
+## 📊 API Endpoints
+
+| Endpoint | Method | Auth | Description |
+|----------|--------|------|-------------|
+| `/api/message` | POST | No | Send anonymous message |
+| `/api/get-messages` | GET | Yes | Fetch messages & stats |
+| `/api/accept-messages` | POST | Yes | Toggle acceptance |
+| `/api/check-user` | GET | No | Check user status |
+
+## 📊 API Response Format
+
+All API endpoints follow a consistent response structure:
+
+```typescript
+{
+  success: boolean;
+  message: string;
+  data?: any;           // Optional data payload
+  errors?: any[];       // Validation errors if any
+}
+```
+
+## 🤝 Contributing
+
+Contributions are welcome! Please follow these steps:
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Commit your changes: `git commit -m 'Add amazing feature'`
+4. Push to the branch: `git push origin feature/amazing-feature`
+5. Open a Pull Request
+
+## 📝 License
+
+This project is open source and available under the [MIT License](LICENSE).
+
+## 👨‍💻 Author
+
+**Your Name**
+- GitHub: [@yourusername](https://github.com/yourusername)
+- LinkedIn: [Your LinkedIn](https://linkedin.com/in/yourprofile)
+
+## 🙏 Acknowledgments
+
+- [Next.js](https://nextjs.org/) - The React Framework
+- [Clerk](https://clerk.com/) - Authentication Platform
+- [MongoDB](https://www.mongodb.com/) - Database
+- [Tailwind CSS](https://tailwindcss.com/) - CSS Framework
+- [Recharts](https://recharts.org/) - Chart Library
+- [Zod](https://zod.dev/) - Schema Validation
+
+## 📧 Support
+
+For support, email your.email@example.com or open an issue in the GitHub repository.
+
+---
+
+**Made with ❤️ using Next.js and TypeScript**
 
 **How to get these values:**
 - **MONGODB_URI**: Get from MongoDB Atlas or your local MongoDB connection string
@@ -133,67 +221,17 @@ src/app/
 │   ├── sign-in/                # Sign in endpoint
 │   ├── verify/                 # Email verification
 │   ├── message/                # Send messages
-│   ├── get-messages/           # Fetch messages
-│   └── accept-messages/        # Toggle acceptance
-├── dashboard/                  # User dashboard (protected)
-├── sign-up/                    # Registration page
-├── sign-in/                    # Sign in page
-├── verify/                     # Email verification page
-├── Sign-in/                    # Alternative sign-in route
-├── lib/                        # Utilities
-├── model/                      # MongoDB models
-├── schemas/                    # Zod validation schemas
-└── type/                       # TypeScript types
-```
+│  🤝 Contributing
 
-## Check MongoDB Connection
+Contributions welcome! Fork the repo, create a feature branch, and submit a PR.
 
-### Method 1: Health Check API (Recommended)
-1. Start your development server: `npm run dev`
-2. Open your browser or use curl:
-   ```bash
-   curl http://localhost:3000/api/health
-   ```
-3. Or visit: `http://localhost:3000/api/health` in your browser
+## 📝 License
 
-The response will show:
-- ✅ `"connected": true` - MongoDB is connected
-- ❌ `"connected": false` - MongoDB connection failed (check error message)
+MIT License - feel free to use this project for learning or personal use.
 
-### Method 2: Check Server Logs
-When you start the server, look for these messages in the console:
-- ✅ `"MongoDB connected successfully"` - Connection working
-- ❌ `"MongoDB connection error"` - Connection failed
+---
 
-### Method 3: Test Script
-Run the test script:
-```bash
-node check-mongodb.js
-```
-
-This will test the connection and provide detailed error messages if it fails.
-
-## Troubleshooting
-
-### Email not received?
-- Check spam folder
-- Verify RESEND_API_KEY is correct
-- Check Resend dashboard for email logs
-- Ensure email domain is verified in Resend (for production)
-
-### MongoDB connection error?
-- **Check MONGODB_URI**: Verify the connection string is correct in `.env.local`
-- **Local MongoDB**: Ensure MongoDB service is running (`sudo systemctl status mongod` or `brew services list`)
-- **MongoDB Atlas**: 
-  - Check if your IP is whitelisted in Network Access
-  - Verify database user credentials
-  - Ensure cluster is running (not paused)
-- **Connection timeout**: Check firewall settings or network connectivity
-- **Authentication failed**: Verify username and password in connection string
-- **Use the health check**: Visit `/api/health` to see detailed connection status
-
-### Authentication not working?
-- Verify NEXTAUTH_SECRET is set
+**Made with ❤️ using Next.js 14 &
 - Check NEXTAUTH_URL matches your app URL
 - Clear browser cookies and try again
 
